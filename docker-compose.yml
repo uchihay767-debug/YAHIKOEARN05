@@ -1,15 +1,21 @@
-services:
-  - type: web
-    name: telegram-bot
-    env: docker
-    dockerfilePath: ./Dockerfile
-    envVars:
-      - key: BOT_TOKEN
-        sync: false
-      - key: WEBHOOK_URL
-        fromService:
-          type: generated
-          name: telegram-bot
-          property: url
-          suffix: /webhook
-    autoDeploy: false
+FROM php:8.2-apache
+
+RUN apt-get update && apt-get install -y \
+    libzip-dev unzip \
+    && docker-php-ext-install zip pdo_mysql
+
+RUN a2enmod rewrite
+
+WORKDIR /var/www/html
+COPY . .
+
+# Create files if missing & set permissions
+RUN touch users.json error.log \
+    && echo '{}' > users.json \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html \
+    && chmod 666 users.json error.log \
+    && [ -f 000-default.conf ] && cp 000-default.conf /etc/apache2/sites-available/000-default.conf || true
+
+EXPOSE 10000
+CMD ["apache2-foreground"]
