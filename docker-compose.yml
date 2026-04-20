@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: telegram-bot
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: WEBHOOK_URL
+        fromService:
+          type: generated
+          name: telegram-bot
+          property: url
+          suffix: /webhook
+    autoDeploy: false
